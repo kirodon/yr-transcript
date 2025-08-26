@@ -1,9 +1,9 @@
-# app.py (Corrected Version)
+# app.py (Final Correct Version)
 
 import streamlit as st
 from urllib.parse import urlparse, parse_qs
-# CHANGE 1: We now import 'get_transcript' directly
-from youtube_transcript_api import TranscriptsDisabled, NoTranscriptFound, get_transcript
+# This is the correct way to import the main class
+from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 
 def get_video_id(url):
     """
@@ -28,23 +28,20 @@ def get_video_id(url):
 def fetch_transcript_text(video_id):
     """
     Fetches the transcript for a given video ID and handles errors.
-    Returns the transcript text or an error message string.
     """
     try:
-        # CHANGE 2: We now call 'get_transcript' as a direct function
-        transcript_list = get_transcript(video_id)
+        # This is the correct way to call the function
+        transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
         return "\n".join([item['text'] for item in transcript_list])
     except TranscriptsDisabled:
         return "Error: Transcripts are disabled for this video."
     except NoTranscriptFound:
-        return "Error: No transcript could be found for this video. It might be a music video, too new, or in a language without auto-captions."
+        return "Error: No transcript could be found for this video."
     except Exception as e:
         return f"An unexpected error occurred: {e}"
 
 # --- Streamlit Web App Interface ---
-
 st.set_page_config(page_title="YouTube Transcript Fetcher", layout="centered")
-
 st.title("YouTube Video Transcript Fetcher")
 st.write("Paste a YouTube video URL below to get its full transcript.")
 
