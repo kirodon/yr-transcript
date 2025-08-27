@@ -8,11 +8,11 @@ import time
 st.set_page_config(
     page_title="YouTube Transcript Fetcher",
     page_icon="🎬",
-    layout="centered",  # Changed to 'centered' for better control
+    layout="centered",
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS to hide default markdown and enforce compact layout
+# Custom CSS to aggressively hide default markdown and enforce compact layout
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap');
@@ -21,15 +21,18 @@ st.markdown("""
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* Hide or style default Streamlit markdown container */
+    /* Target and hide default Streamlit markdown container */
     .stMarkdown {
         padding: 0 !important;
         margin: 0 !important;
+        display: none !important; /* Stronger hide */
     }
     [data-testid="stMarkdownContainer"] {
         padding: 0 !important;
         margin: 0 !important;
         background: none !important;
+        border: none !important;
+        box-shadow: none !important;
     }
     
     .stApp {
@@ -38,13 +41,13 @@ st.markdown("""
     }
     
     .main-container {
-        max-width: 450px; /* Even narrower */
+        max-width: 450px;
         margin: 0 auto;
         padding: 1.5rem;
         background: #ffffff;
         border-radius: 10px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        margin-top: 1rem;
+        margin-top: 0; /* Remove top margin to eliminate gap */
     }
     
     .main-title {
@@ -171,15 +174,15 @@ def fetch_transcript_text(video_url, lang_code='en'):
         ]
         result = subprocess.run(command, capture_output=True, text=True, timeout=60, check=True)
         if not os.path.exists(output_filename):
-            return f"Error: Could not find a transcript for the language '{lang_code}'."
+            return f"Error: No transcript found for '{lang_code}'."
         with open(output_filename, 'r', encoding='utf-8') as f:
             vtt_content = f.read()
         clean_text = clean_vtt(vtt_content)
-        return clean_text
+        return clean_text if clean_text else f"Error: Transcript for '{lang_code}' is empty."
     except subprocess.CalledProcessError as e:
         error_message = e.stderr.strip()
         if "no subtitles available" in error_message.lower():
-            return f"Error: This video does not have subtitles available in the language '{lang_code}'."
+            return f"Error: No subtitles available for '{lang_code}'."
         return f"Error running yt-dlp: {error_message}"
     except Exception as e:
         return f"An unexpected error occurred: {e}"
@@ -187,15 +190,15 @@ def fetch_transcript_text(video_url, lang_code='en'):
         if os.path.exists(output_filename):
             os.remove(output_filename)
 
-st.markdown('<div class="main-container">', unsafe_allow_html=True)
-
-st.markdown("""
-<h1 class="main-title">🎬 YouTube Transcript Fetcher</h1>
-<p class="subtitle">Extract and download transcripts effortlessly</p>
-""", unsafe_allow_html=True)
-
-# Use a single column for simplicity, relying on max-width
+# Use a container to encapsulate all content
 with st.container():
+    st.markdown('<div class="main-container">', unsafe_allow_html=True)
+
+    st.markdown("""
+    <h1 class="main-title">🎬 YouTube Transcript Fetcher</h1>
+    <p class="subtitle">Extract and download transcripts effortlessly</p>
+    """, unsafe_allow_html=True)
+
     st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.4rem;">🔗 YouTube Video URL</p>', unsafe_allow_html=True)
     youtube_url = st.text_input(
         "YouTube Video URL",
@@ -220,8 +223,9 @@ with st.container():
     selected_language = st.selectbox(
         "Select Language",
         options=list(language_options.keys()),
-        index=0,  # Ensure "English" is default
-        label_visibility="collapsed"
+        index=0,  # Default to "English"
+        label_visibility="collapsed",
+        key="language_select"  # Unique key to ensure proper state
     )
     
     if st.button("Fetch Transcript", use_container_width=True):
@@ -278,11 +282,11 @@ with st.container():
         else:
             st.warning("Please enter a YouTube URL.")
 
-st.markdown("---")
-st.markdown("""
-<div style="text-align: center; color: #7f8c8d; padding: 0.5rem; font-size: 0.85rem;">
-    <p>Fast and reliable transcript extraction</p>
-</div>
-""", unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; color: #7f8c8d; padding: 0.5rem; font-size: 0.85rem;">
+        <p>Fast and reliable transcript extraction</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
