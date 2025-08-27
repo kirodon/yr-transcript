@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS to neutralize default markdown without hiding content
+# Custom CSS to refine default markdown and enforce compact layout
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap');
@@ -21,18 +21,17 @@ st.markdown("""
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* Neutralize default Streamlit markdown container */
+    /* Refine default Streamlit markdown container */
     .stMarkdown {
         padding: 0 !important;
         margin: 0 !important;
-        background: none !important;
     }
-    [data-testid="stMarkdownContainer"] {
+    [data-testid="stMarkdownContainer"] > *:not(.main-container) {
+        display: none !important; /* Hide only non-main-container elements */
+    }
+    [data-testid="stMarkdownContainer"] .main-container {
+        margin: 0 auto !important;
         padding: 0 !important;
-        margin: 0 !important;
-        background: none !important;
-        border: none !important;
-        box-shadow: none !important;
     }
     
     .stApp {
@@ -47,7 +46,6 @@ st.markdown("""
         background: #ffffff;
         border-radius: 10px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        margin-top: 0;
     }
     
     .main-title {
@@ -172,7 +170,9 @@ def fetch_transcript_text(video_url, lang_code='en'):
             "-o", "downloaded_transcript",
             video_url
         ]
+        st.write(f"Debug: Running command for {lang_code}: {' '.join(command)}")  # Debug command
         result = subprocess.run(command, capture_output=True, text=True, timeout=60, check=True)
+        st.write(f"Debug: yt-dlp output: {result.stdout}")  # Debug output
         if not os.path.exists(output_filename):
             return f"Error: No transcript found for '{lang_code}'. Check if subtitles are available."
         with open(output_filename, 'r', encoding='utf-8') as f:
@@ -183,6 +183,7 @@ def fetch_transcript_text(video_url, lang_code='en'):
         return clean_text
     except subprocess.CalledProcessError as e:
         error_message = e.stderr.strip()
+        st.write(f"Debug: yt-dlp error: {error_message}")  # Debug error
         if "no subtitles available" in error_message.lower():
             return f"Error: No subtitles available for '{lang_code}'."
         return f"Error running yt-dlp: {error_message}"
@@ -192,104 +193,103 @@ def fetch_transcript_text(video_url, lang_code='en'):
         if os.path.exists(output_filename):
             os.remove(output_filename)
 
-# Use a container to encapsulate all content
-with st.container():
-    st.markdown('<div class="main-container">', unsafe_allow_html=True)
+# Use native Streamlit layout
+st.markdown('<div class="main-container">', unsafe_allow_html=True)
 
-    st.markdown("""
-    <h1 class="main-title">🎬 YouTube Transcript Fetcher</h1>
-    <p class="subtitle">Extract and download transcripts effortlessly</p>
-    """, unsafe_allow_html=True)
+st.markdown("""
+<h1 class="main-title">🎬 YouTube Transcript Fetcher</h1>
+<p class="subtitle">Extract and download transcripts effortlessly</p>
+""", unsafe_allow_html=True)
 
-    st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.4rem;">🔗 YouTube Video URL</p>', unsafe_allow_html=True)
-    youtube_url = st.text_input(
-        "YouTube Video URL",
-        placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-        label_visibility="collapsed"
-    )
-    
-    st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.4rem; margin-top: 1rem;">🌐 Select Language</p>', unsafe_allow_html=True)
-    language_options = {
-        "English": "en",
-        "Spanish": "es",
-        "French": "fr",
-        "German": "de",
-        "Italian": "it",
-        "Portuguese": "pt",
-        "Russian": "ru",
-        "Japanese": "ja",
-        "Korean": "ko",
-        "Chinese": "zh"
-    }
-    
-    selected_language = st.selectbox(
-        "Select Language",
-        options=list(language_options.keys()),
-        index=0,  # Default to "English"
-        label_visibility="collapsed",
-        key="language_select"
-    )
-    st.write(f"Debug: Selected language - {selected_language} ({language_options[selected_language]})")  # Debug output
-    
-    if st.button("Fetch Transcript", use_container_width=True):
-        if youtube_url:
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            for i in range(20):
-                progress_bar.progress(i * 5)
-                status_text.text(f"Processing... {i * 5}%")
-                time.sleep(0.1)
+st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.4rem;">🔗 YouTube Video URL</p>', unsafe_allow_html=True)
+youtube_url = st.text_input(
+    "YouTube Video URL",
+    placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    label_visibility="collapsed"
+)
+
+st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.4rem; margin-top: 1rem;">🌐 Select Language</p>', unsafe_allow_html=True)
+language_options = {
+    "English": "en",
+    "Spanish": "es",
+    "French": "fr",
+    "German": "de",
+    "Italian": "it",
+    "Portuguese": "pt",
+    "Russian": "ru",
+    "Japanese": "ja",
+    "Korean": "ko",
+    "Chinese": "zh"
+}
+
+selected_language = st.selectbox(
+    "Select Language",
+    options=list(language_options.keys()),
+    index=0,  # Default to "English"
+    label_visibility="collapsed",
+    key="language_select"
+)
+st.write(f"Debug: Selected language - {selected_language} ({language_options[selected_language]})")  # Debug output
+
+if st.button("Fetch Transcript", use_container_width=True):
+    if youtube_url:
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        for i in range(20):
+            progress_bar.progress(i * 5)
+            status_text.text(f"Processing... {i * 5}%")
+            time.sleep(0.1)
+        
+        with st.spinner('Fetching transcript...'):
+            transcript = fetch_transcript_text(youtube_url, lang_code=language_options[selected_language])
             
-            with st.spinner('Fetching transcript...'):
-                transcript = fetch_transcript_text(youtube_url, lang_code=language_options[selected_language])
+            progress_bar.progress(100)
+            status_text.text("Done!")
+            time.sleep(0.5)
+            progress_bar.empty()
+            status_text.empty()
+            
+            if transcript.startswith("Error:"):
+                st.error(transcript)
+            else:
+                word_count = len(transcript.split())
+                char_count = len(transcript)
+                estimated_read_time = max(1, word_count // 200)
                 
-                progress_bar.progress(100)
-                status_text.text("Done!")
-                time.sleep(0.5)
-                progress_bar.empty()
-                status_text.empty()
+                st.markdown("### Transcript Stats")
+                metric_col1, metric_col2, metric_col3 = st.columns(3)
+                with metric_col1:
+                    st.markdown('<div class="metric-card"><div class="metric-value">{:,}</div><div class="metric-label">Words</div></div>'.format(word_count), unsafe_allow_html=True)
+                with metric_col2:
+                    st.markdown('<div class="metric-card"><div class="metric-value">{:,}</div><div class="metric-label">Characters</div></div>'.format(char_count), unsafe_allow_html=True)
+                with metric_col3:
+                    st.markdown('<div class="metric-card"><div class="metric-value">{}</div><div class="metric-label">Est. Read Time</div></div>'.format(f"{estimated_read_time} min"), unsafe_allow_html=True)
                 
-                if transcript.startswith("Error:"):
-                    st.error(transcript)
-                else:
-                    word_count = len(transcript.split())
-                    char_count = len(transcript)
-                    estimated_read_time = max(1, word_count // 200)
-                    
-                    st.markdown("### Transcript Stats")
-                    metric_col1, metric_col2, metric_col3 = st.columns(3)
-                    with metric_col1:
-                        st.markdown('<div class="metric-card"><div class="metric-value">{:,}</div><div class="metric-label">Words</div></div>'.format(word_count), unsafe_allow_html=True)
-                    with metric_col2:
-                        st.markdown('<div class="metric-card"><div class="metric-value">{:,}</div><div class="metric-label">Characters</div></div>'.format(char_count), unsafe_allow_html=True)
-                    with metric_col3:
-                        st.markdown('<div class="metric-card"><div class="metric-value">{}</div><div class="metric-label">Est. Read Time</div></div>'.format(f"{estimated_read_time} min"), unsafe_allow_html=True)
-                    
-                    st.markdown("### Transcript")
-                    trans_col1, trans_col2 = st.columns([4, 1])
-                    with trans_col1:
-                        st.text_area(
-                            "Full transcript:",
-                            transcript,
-                            height=400,
-                            label_visibility="collapsed"
-                        )
-                    with trans_col2:
-                        st.download_button(
-                            label="Download",
-                            data=transcript.encode('utf-8'),
-                            file_name="transcript.txt",
-                            mime='text/plain',
-                            use_container_width=True
-                        )
-        else:
-            st.warning("Please enter a YouTube URL.")
+                st.markdown("### Transcript")
+                trans_col1, trans_col2 = st.columns([4, 1])
+                with trans_col1:
+                    st.text_area(
+                        "Full transcript:",
+                        transcript,
+                        height=400,
+                        label_visibility="collapsed"
+                    )
+                with trans_col2:
+                    st.download_button(
+                        label="Download",
+                        data=transcript.encode('utf-8'),
+                        file_name="transcript.txt",
+                        mime='text/plain',
+                        use_container_width=True
+                    )
+    else:
+        st.warning("Please enter a YouTube URL.")
 
-    st.markdown("---")
-    st.markdown("""
-    <div style="text-align: center; color: #7f8c8d; padding: 0.5rem; font-size: 0.85rem;">
-        <p>Fast and reliable transcript extraction</p>
-    </div>
-    """, unsafe_allow_html=True)
+st.markdown("---")
+st.markdown("""
+<div style="text-align: center; color: #7f8c8d; padding: 0.5rem; font-size: 0.85rem;">
+    <p>Fast and reliable transcript extraction</p>
+</div>
+""", unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
