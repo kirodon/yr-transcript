@@ -211,100 +211,99 @@ def fetch_transcript_text(video_url, lang_code='en'):
         for f in glob.glob("downloaded_transcript*.vtt"):
             os.remove(f)
 
-# ---------- UI ----------
+with st.container():
+    st.markdown("""
+    <div class="main-container">
+        <h1 class="main-title">🎬 YouTube Transcript Fetcher</h1>
+        <p class="subtitle">Extract and download transcripts effortlessly</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-st.markdown('<div class="main-container">', unsafe_allow_html=True)
+    # Input fields
+    st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.4rem;">🔗 YouTube Video URL</p>', unsafe_allow_html=True)
+    youtube_url = st.text_input(
+        "YouTube Video URL",
+        placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        label_visibility="collapsed"
+    )
 
-st.markdown("""
-<h1 class="main-title">🎬 YouTube Transcript Fetcher</h1>
-<p class="subtitle">Extract and download transcripts effortlessly</p>
-""", unsafe_allow_html=True)
+    st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.4rem; margin-top: 1rem;">🌐 Select Language</p>', unsafe_allow_html=True)
+    language_options = {
+        "English": "en",
+        "Spanish": "es",
+        "French": "fr",
+        "German": "de",
+        "Italian": "it",
+        "Portuguese": "pt",
+        "Russian": "ru",
+        "Japanese": "ja",
+        "Korean": "ko",
+        "Chinese": "zh"
+    }
 
-st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.4rem;">🔗 YouTube Video URL</p>', unsafe_allow_html=True)
-youtube_url = st.text_input(
-    "YouTube Video URL",
-    placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-    label_visibility="collapsed"
-)
+    selected_language = st.selectbox(
+        "Select Language",
+        options=list(language_options.keys()),
+        index=0,
+        label_visibility="collapsed",
+        key="language_select"
+    )
 
-st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.4rem; margin-top: 1rem;">🌐 Select Language</p>', unsafe_allow_html=True)
-language_options = {
-    "English": "en",
-    "Spanish": "es",
-    "French": "fr",
-    "German": "de",
-    "Italian": "it",
-    "Portuguese": "pt",
-    "Russian": "ru",
-    "Japanese": "ja",
-    "Korean": "ko",
-    "Chinese": "zh"
-}
-
-selected_language = st.selectbox(
-    "Select Language",
-    options=list(language_options.keys()),
-    index=0,
-    label_visibility="collapsed",
-    key="language_select"
-)
-
-if st.button("Fetch Transcript", use_container_width=True):
-    if youtube_url:
-        progress_bar = st.progress(0)
-        status_text = st.empty()
-        for i in range(20):
-            progress_bar.progress(i * 5)
-            status_text.text(f"Processing... {i * 5}%")
-            time.sleep(0.05)
-        
-        with st.spinner('Fetching transcript...'):
-            transcript = fetch_transcript_text(youtube_url, lang_code=language_options[selected_language])
+    if st.button("Fetch Transcript", use_container_width=True):
+        if youtube_url:
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            for i in range(20):
+                progress_bar.progress(i * 5)
+                status_text.text(f"Processing... {i * 5}%")
+                time.sleep(0.05)
             
-            progress_bar.progress(100)
-            status_text.text("Done!")
-            time.sleep(0.5)
-            progress_bar.empty()
-            status_text.empty()
-            
-            if transcript.startswith("Error:"):
-                st.error(transcript)
-            else:
-                word_count = len(transcript.split())
-                char_count = len(transcript)
-                estimated_read_time = max(1, word_count // 200)
+            with st.spinner('Fetching transcript...'):
+                transcript = fetch_transcript_text(youtube_url, lang_code=language_options[selected_language])
                 
-                st.markdown("### Transcript Stats")
-                metric_col1, metric_col2, metric_col3 = st.columns(3)
-                with metric_col1:
-                    st.markdown('<div class="metric-card"><div class="metric-value">{:,}</div><div class="metric-label">Words</div></div>'.format(word_count), unsafe_allow_html=True)
-                with metric_col2:
-                    st.markdown('<div class="metric-card"><div class="metric-value">{:,}</div><div class="metric-label">Characters</div></div>'.format(char_count), unsafe_allow_html=True)
-                with metric_col3:
-                    st.markdown('<div class="metric-card"><div class="metric-value">{}</div><div class="metric-label">Est. Read Time</div></div>'.format(f"{estimated_read_time} min"), unsafe_allow_html=True)
+                progress_bar.progress(100)
+                status_text.text("Done!")
+                time.sleep(0.5)
+                progress_bar.empty()
+                status_text.empty()
                 
-                st.markdown("### Transcript")
-                st.text_area(
-                    "Full transcript:",
-                    transcript,
-                    height=400,
-                    label_visibility="collapsed"
-                )
-                st.download_button(
-                    label="⬇️ Download Transcript",
-                    data=transcript.encode('utf-8'),
-                    file_name="transcript.txt",
-                    mime='text/plain',
-                    use_container_width=True
-                )
-    else:
-        st.warning("Please enter a YouTube URL.")
+                if transcript.startswith("Error:"):
+                    st.error(transcript)
+                else:
+                    word_count = len(transcript.split())
+                    char_count = len(transcript)
+                    estimated_read_time = max(1, word_count // 200)
+                    
+                    st.markdown("### Transcript Stats")
+                    metric_col1, metric_col2, metric_col3 = st.columns(3)
+                    with metric_col1:
+                        st.markdown('<div class="metric-card"><div class="metric-value">{:,}</div><div class="metric-label">Words</div></div>'.format(word_count), unsafe_allow_html=True)
+                    with metric_col2:
+                        st.markdown('<div class="metric-card"><div class="metric-value">{:,}</div><div class="metric-label">Characters</div></div>'.format(char_count), unsafe_allow_html=True)
+                    with metric_col3:
+                        st.markdown('<div class="metric-card"><div class="metric-value">{}</div><div class="metric-label">Est. Read Time</div></div>'.format(f"{estimated_read_time} min"), unsafe_allow_html=True)
+                    
+                    st.markdown("### Transcript")
+                    st.text_area(
+                        "Full transcript:",
+                        transcript,
+                        height=400,
+                        label_visibility="collapsed"
+                    )
+                    st.download_button(
+                        label="⬇️ Download Transcript",
+                        data=transcript.encode('utf-8'),
+                        file_name="transcript.txt",
+                        mime='text/plain',
+                        use_container_width=True
+                    )
+        else:
+            st.warning("Please enter a YouTube URL.")
 
-st.markdown("---")
-st.markdown("""
-<div style="text-align: center; color: #7f8c8d; padding: 0.5rem; font-size: 0.85rem;">
-    <p>Fast and reliable transcript extraction</p>
-</div>
-""", unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; color: #7f8c8d; padding: 0.5rem; font-size: 0.85rem;">
+        <p>Fast and reliable transcript extraction</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-st.markdown('</div>', unsafe_allow_html=True)
