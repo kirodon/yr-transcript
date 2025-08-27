@@ -31,6 +31,14 @@ st.markdown("""
         border: none !important;
         box-shadow: none !important;
     }
+
+    [data-testid="stMarkdown"] {
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+    }
     
     .stApp {
         background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
@@ -302,6 +310,7 @@ with st.container():
         <p>Fast and reliable transcript extraction</p>
     </div>
     """, unsafe_allow_html=True)
+
 
 
 
