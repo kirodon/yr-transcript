@@ -64,26 +64,33 @@ st.markdown("""
         letter-spacing: 0.5px;
     }
     
-    /* Input styling */
+    /* Input styling - Better contrast */
     .stTextInput > div > div > input {
-        background: rgba(255, 255, 255, 0.1);
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        border-radius: 16px;
-        color: white;
-        font-size: 1rem;
-        padding: 1.2rem 1.5rem;
+        background: rgba(255, 255, 255, 0.9) !important;
+        border: 2px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 16px !important;
+        color: #333 !important;
+        font-size: 1rem !important;
+        padding: 1.2rem 1.5rem !important;
         backdrop-filter: blur(10px);
         transition: all 0.3s ease;
     }
     
     .stTextInput > div > div > input::placeholder {
-        color: rgba(255, 255, 255, 0.5);
+        color: rgba(0, 0, 0, 0.5) !important;
     }
     
     .stTextInput > div > div > input:focus {
-        border-color: rgba(255, 255, 255, 0.5);
-        background: rgba(255, 255, 255, 0.15);
-        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+        border-color: #ff6b6b !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.2) !important;
+    }
+    
+    /* Input label styling */
+    .stTextInput > label {
+        color: white !important;
+        font-weight: 600 !important;
+        margin-bottom: 0.5rem !important;
     }
     
     /* Button styling */
