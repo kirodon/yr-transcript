@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS to aggressively hide default markdown and enforce compact layout
+# Custom CSS to neutralize default markdown without hiding content
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap');
@@ -21,11 +21,11 @@ st.markdown("""
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* Target and hide default Streamlit markdown container */
+    /* Neutralize default Streamlit markdown container */
     .stMarkdown {
         padding: 0 !important;
         margin: 0 !important;
-        display: none !important; /* Stronger hide */
+        background: none !important;
     }
     [data-testid="stMarkdownContainer"] {
         padding: 0 !important;
@@ -47,7 +47,7 @@ st.markdown("""
         background: #ffffff;
         border-radius: 10px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        margin-top: 0; /* Remove top margin to eliminate gap */
+        margin-top: 0;
     }
     
     .main-title {
@@ -174,18 +174,20 @@ def fetch_transcript_text(video_url, lang_code='en'):
         ]
         result = subprocess.run(command, capture_output=True, text=True, timeout=60, check=True)
         if not os.path.exists(output_filename):
-            return f"Error: No transcript found for '{lang_code}'."
+            return f"Error: No transcript found for '{lang_code}'. Check if subtitles are available."
         with open(output_filename, 'r', encoding='utf-8') as f:
             vtt_content = f.read()
         clean_text = clean_vtt(vtt_content)
-        return clean_text if clean_text else f"Error: Transcript for '{lang_code}' is empty."
+        if not clean_text:
+            return f"Error: Transcript for '{lang_code}' is empty or unreadable."
+        return clean_text
     except subprocess.CalledProcessError as e:
         error_message = e.stderr.strip()
         if "no subtitles available" in error_message.lower():
             return f"Error: No subtitles available for '{lang_code}'."
         return f"Error running yt-dlp: {error_message}"
     except Exception as e:
-        return f"An unexpected error occurred: {e}"
+        return f"An unexpected error occurred: {str(e)}"
     finally:
         if os.path.exists(output_filename):
             os.remove(output_filename)
@@ -225,8 +227,9 @@ with st.container():
         options=list(language_options.keys()),
         index=0,  # Default to "English"
         label_visibility="collapsed",
-        key="language_select"  # Unique key to ensure proper state
+        key="language_select"
     )
+    st.write(f"Debug: Selected language - {selected_language} ({language_options[selected_language]})")  # Debug output
     
     if st.button("Fetch Transcript", use_container_width=True):
         if youtube_url:
