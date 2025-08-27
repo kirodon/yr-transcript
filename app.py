@@ -1,10 +1,11 @@
+```python
 import streamlit as st
 import subprocess
 import os
 import re
 import time
 
-# Configure the page with a modern theme
+# Configure the page with a minimalist theme
 st.set_page_config(
     page_title="YouTube Transcript Fetcher",
     page_icon="🎬",
@@ -12,156 +13,133 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for a cooler UX
+# Custom CSS for a clean and simple UX
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap');
     
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
     .stApp {
-        background: linear-gradient(135deg, #6b48ff 0%, #00ddeb 100%);
-        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+        font-family: 'Roboto', sans-serif;
     }
     
     .main-container {
-        max-width: 900px;
+        max-width: 700px;
         margin: 0 auto;
-        padding: 2.5rem;
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(15px);
-        border-radius: 24px;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-        margin-top: 3rem;
-        margin-bottom: 3rem;
-        animation: fadeIn 0.5s ease-in;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        padding: 2rem;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-top: 2rem;
+        margin-bottom: 2rem;
     }
     
     .main-title {
-        font-size: 3.8rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        font-size: 2.5rem;
+        font-weight: 500;
+        color: #2c3e50;
         text-align: center;
-        margin-bottom: 1.5rem;
-        text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        margin-bottom: 1rem;
     }
     
     .subtitle {
-        font-size: 1.3rem;
-        color: rgba(255, 255, 255, 0.85);
+        font-size: 1rem;
+        color: #7f8c8d;
         text-align: center;
-        margin-bottom: 3.5rem;
-        font-weight: 400;
-        letter-spacing: 0.5px;
+        margin-bottom: 2rem;
+        font-weight: 300;
     }
     
     .stTextInput > div > div > input {
-        background: rgba(255, 255, 255, 0.95) !important;
-        border: 2px solid rgba(255, 255, 255, 0.2) !important;
-        border-radius: 20px !important;
-        color: #1a1a1a !important;
-        font-size: 1.1rem !important;
-        padding: 1.4rem 1.8rem !important;
-        backdrop-filter: blur(12px);
-        transition: all 0.3s ease;
+        background: #ffffff !important;
+        border: 1px solid #ecf0f1 !important;
+        border-radius: 8px !important;
+        color: #2c3e50 !important;
+        font-size: 1rem !important;
+        padding: 0.8rem 1rem !important;
+        transition: border-color 0.3s ease;
     }
     
     .stTextInput > div > div > input:focus {
-        border-color: #00ddeb !important;
-        box-shadow: 0 0 0 3px rgba(0, 221, 235, 0.3) !important;
+        border-color: #3498db !important;
     }
     
     .stTextInput > label, .stSelectbox > label {
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        margin-bottom: 0.7rem !important;
-        font-size: 1rem !important;
+        color: #2c3e50 !important;
+        font-weight: 400 !important;
+        margin-bottom: 0.5rem !important;
     }
     
     .stSelectbox > div > div > div {
-        background: rgba(255, 255, 255, 0.95) !important;
-        border: 2px solid rgba(255, 255, 255, 0.2) !important;
-        border-radius: 20px !important;
-        color: #1a1a1a !important;
+        background: #ffffff !important;
+        border: 1px solid #ecf0f1 !important;
+        border-radius: 8px !important;
+        color: #2c3e50 !important;
     }
     
     .stButton > button {
         width: 100%;
-        padding: 1.5rem;
-        background: linear-gradient(135deg, #00ddeb 0%, #6b48ff 100%);
+        padding: 0.9rem;
+        background: #3498db;
         border: none;
-        border-radius: 20px;
+        border-radius: 8px;
         color: white;
-        font-size: 1.2rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 1.2px;
-        transition: all 0.4s ease;
-        box-shadow: 0 10px 30px rgba(107, 72, 255, 0.4);
+        font-size: 1rem;
+        font-weight: 500;
+        transition: background 0.3s ease;
     }
     
     .stButton > button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 15px 40px rgba(107, 72, 255, 0.5);
+        background: #2980b9;
     }
     
     .stTextArea > div > div > textarea {
-        background: rgba(255, 255, 255, 0.95) !important;
-        border: 2px solid rgba(255, 255, 255, 0.2) !important;
-        border-radius: 20px !important;
-        color: #1a1a1a !important;
-        backdrop-filter: blur(12px);
+        background: #ffffff !important;
+        border: 1px solid #ecf0f1 !important;
+        border-radius: 8px !important;
+        color: #2c3e50 !important;
     }
     
     .stDownloadButton > button {
-        background: linear-gradient(135deg, #6b48ff 0%, #00ddeb 100%);
+        background: #2ecc71;
         border: none;
-        border-radius: 15px;
+        border-radius: 8px;
         color: white;
-        font-weight: 600;
-        padding: 1rem 2rem;
-        transition: all 0.4s ease;
+        font-weight: 500;
+        padding: 0.7rem 1.2rem;
+        transition: background 0.3s ease;
     }
     
     .stDownloadButton > button:hover {
-        transform: scale(1.1);
-        box-shadow: 0 12px 30px rgba(107, 72, 255, 0.4);
+        background: #27ae60;
     }
     
     .stProgress > div > div > div > div {
-        background: linear-gradient(135deg, #00ddeb 0%, #6b48ff 100%);
+        background: #3498db;
     }
     
     .metric-card {
-        background: rgba(255, 255, 255, 0.1) !important;
-        padding: 1.2rem;
-        border-radius: 15px;
+        background: #f9fbfd;
+        padding: 0.8rem;
+        border-radius: 8px;
         text-align: center;
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border: 1px solid #ecf0f1;
     }
     
     .metric-value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #ffffff;
-        text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        font-size: 1.5rem;
+        font-weight: 500;
+        color: #2c3e50;
     }
     
     .metric-label {
-        color: rgba(255, 255, 255, 0.9) !important;
-        font-size: 1rem;
-        margin-top: 0.6rem;
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        margin-top: 0.3rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -207,20 +185,20 @@ st.markdown('<div class="main-container">', unsafe_allow_html=True)
 
 st.markdown("""
 <h1 class="main-title">🎬 YouTube Transcript Fetcher</h1>
-<p class="subtitle">Extract transcripts with a futuristic vibe</p>
+<p class="subtitle">Extract and download transcripts effortlessly</p>
 """, unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns([1, 6, 1])
 
 with col2:
-    st.markdown('<p style="color: #ffffff; font-weight: 600; margin-bottom: 0.7rem;">🔗 YouTube Video URL</p>', unsafe_allow_html=True)
+    st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.5rem;">🔗 YouTube Video URL</p>', unsafe_allow_html=True)
     youtube_url = st.text_input(
         "YouTube Video URL",
         placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         label_visibility="collapsed"
     )
     
-    st.markdown('<p style="color: #ffffff; font-weight: 600; margin-bottom: 0.7rem; margin-top: 1.5rem;">🌐 Select Language</p>', unsafe_allow_html=True)
+    st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.5rem; margin-top: 1rem;">🌐 Select Language</p>', unsafe_allow_html=True)
     language_options = {
         "English": "en",
         "Spanish": "es",
@@ -241,32 +219,32 @@ with col2:
         label_visibility="collapsed"
     )
     
-    if st.button("✨ Fetch Transcript", use_container_width=True):
+    if st.button("Fetch Transcript", use_container_width=True):
         if youtube_url:
             progress_bar = st.progress(0)
             status_text = st.empty()
             for i in range(20):
                 progress_bar.progress(i * 5)
-                status_text.text(f"🔄 Processing... {i * 5}%")
+                status_text.text(f"Processing... {i * 5}%")
                 time.sleep(0.1)
             
-            with st.spinner('🎯 Fetching transcript...'):
+            with st.spinner('Fetching transcript...'):
                 transcript = fetch_transcript_text(youtube_url, lang_code=language_options[selected_language])
                 
                 progress_bar.progress(100)
-                status_text.text("✅ Done!")
+                status_text.text("Done!")
                 time.sleep(0.5)
                 progress_bar.empty()
                 status_text.empty()
                 
                 if transcript.startswith("Error:"):
-                    st.error(f"❌ {transcript}")
+                    st.error(transcript)
                 else:
                     word_count = len(transcript.split())
                     char_count = len(transcript)
                     estimated_read_time = max(1, word_count // 200)
                     
-                    st.markdown("### 📊 Transcript Stats")
+                    st.markdown("### Transcript Stats")
                     metric_col1, metric_col2, metric_col3 = st.columns(3)
                     with metric_col1:
                         st.markdown('<div class="metric-card"><div class="metric-value">{:,}</div><div class="metric-label">Words</div></div>'.format(word_count), unsafe_allow_html=True)
@@ -275,31 +253,32 @@ with col2:
                     with metric_col3:
                         st.markdown('<div class="metric-card"><div class="metric-value">{}</div><div class="metric-label">Est. Read Time</div></div>'.format(f"{estimated_read_time} min"), unsafe_allow_html=True)
                     
-                    st.markdown("### 📝 Transcript")
+                    st.markdown("### Transcript")
                     trans_col1, trans_col2 = st.columns([4, 1])
                     with trans_col1:
                         st.text_area(
                             "Full transcript:",
                             transcript,
-                            height=450,
+                            height=400,
                             label_visibility="collapsed"
                         )
                     with trans_col2:
                         st.download_button(
-                            label="⬇️ Download",
+                            label="Download",
                             data=transcript.encode('utf-8'),
                             file_name="transcript.txt",
                             mime='text/plain',
                             use_container_width=True
                         )
         else:
-            st.warning("⚠️ Please enter a YouTube URL.")
+            st.warning("Please enter a YouTube URL.")
 
 st.markdown("---")
 st.markdown("""
-<div style="text-align: center; color: rgba(255, 255, 255, 0.7); padding: 0.5rem; font-size: 1rem;">
-    <p>Fast & reliable • 10+ languages supported</p>
+<div style="text-align: center; color: #7f8c8d; padding: 0.5rem; font-size: 0.9rem;">
+    <p>Fast and reliable transcript extraction</p>
 </div>
 """, unsafe_allow_html=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
+```
