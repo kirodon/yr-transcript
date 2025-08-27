@@ -112,9 +112,13 @@ def clean_vtt(vtt_content):
     return clean_text
 
 def fetch_transcript_text(video_url, lang_code='en'):
-    """Fetch transcript from YouTube using yt-dlp."""
-    # Using a unique temp file name to avoid conflicts if multiple users access the app
-    temp_filename_base = f"transcript_{int(time.time())}_{hash(video_url)}"
+    """
+    Fetch transcript from YouTube using yt-dlp with unique filenames
+    to prevent race conditions on Streamlit Cloud.
+    """
+    # Create a unique filename for this specific request
+    # Using timestamp and hash of URL makes it virtually impossible to collide
+    base_filename = f"transcript_{int(time.time())}_{hash(video_url)}"
     
     try:
         command = [
@@ -122,12 +126,13 @@ def fetch_transcript_text(video_url, lang_code='en'):
             "--write-auto-sub",
             "--sub-lang", lang_code,
             "--skip-download",
-            "-o", temp_filename_base,
+            "-o", base_filename,  # Use the unique base name
             video_url
         ]
         subprocess.run(command, capture_output=True, text=True, timeout=60, check=True)
 
-        vtt_files = glob.glob(f"{temp_filename_base}*.vtt")
+        # Find the specific transcript file that was just created
+        vtt_files = glob.glob(f"{base_filename}*.{lang_code}.vtt")
         if not vtt_files:
             return f"Error: No transcript found for '{lang_code}'. Check subtitle availability."
 
@@ -148,8 +153,8 @@ def fetch_transcript_text(video_url, lang_code='en'):
     except Exception as e:
         return f"Unexpected error: {str(e)}"
     finally:
-        # Clean up any transcript files that were created
-        for f in glob.glob(f"{temp_filename_base}*.vtt"):
+        # Critically, clean up ONLY the files associated with THIS request
+        for f in glob.glob(f"{base_filename}*.vtt"):
             os.remove(f)
 
 # --- Streamlit UI ---
@@ -209,4 +214,5 @@ with st.container():
                     )
         else:
             st.warning("Please enter a YouTube URL.")
+
 
