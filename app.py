@@ -93,7 +93,23 @@ st.markdown("""
         margin-bottom: 0.5rem !important;
     }
     
-    /* Button styling */
+    /* Selectbox styling - Better visibility */
+    .stSelectbox > div > div > div {
+        background: rgba(255, 255, 255, 0.9) !important;
+        border: 2px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 16px !important;
+        color: #333 !important;
+    }
+    
+    .stSelectbox > div > div > div > div {
+        color: #333 !important;
+    }
+    
+    .stSelectbox > label {
+        color: white !important;
+        font-weight: 600 !important;
+        margin-bottom: 0.5rem !important;
+    }
     .stButton > button {
         width: 100%;
         padding: 1.3rem;
@@ -114,13 +130,18 @@ st.markdown("""
         box-shadow: 0 15px 30px rgba(255, 107, 107, 0.4);
     }
     
-    /* Text area styling */
+    /* Text area styling - Better visibility */
     .stTextArea > div > div > textarea {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        color: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.9) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 16px !important;
+        color: #333 !important;
         backdrop-filter: blur(10px);
+    }
+    
+    .stTextArea > label {
+        color: white !important;
+        font-weight: 600 !important;
     }
     
     /* Download button */
@@ -150,21 +171,14 @@ st.markdown("""
         border-top-color: #ff6b6b;
     }
     
-    /* Metrics styling */
-    .metric-container {
-        display: flex;
-        justify-content: space-around;
-        margin: 2rem 0;
-        gap: 1rem;
-    }
-    
+    /* Metrics styling - Better visibility */
     .metric-card {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.2) !important;
         padding: 1rem;
         border-radius: 12px;
         text-align: center;
         backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
         flex: 1;
     }
     
@@ -172,12 +186,43 @@ st.markdown("""
         font-size: 1.8rem;
         font-weight: bold;
         color: white;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     }
     
     .metric-label {
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(255, 255, 255, 0.9) !important;
         font-size: 0.9rem;
         margin-top: 0.5rem;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Metric containers from Streamlit */
+    .css-1r6slb0 {
+        background: rgba(255, 255, 255, 0.2) !important;
+        border-radius: 12px !important;
+        padding: 1rem !important;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    }
+    
+    .css-1r6slb0 .metric-value {
+        color: white !important;
+        font-size: 1.8rem !important;
+        font-weight: bold !important;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Better styling for metric elements */
+    [data-testid="metric-container"] {
+        background: rgba(255, 255, 255, 0.2) !important;
+        border-radius: 12px !important;
+        padding: 1rem !important;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    }
+    
+    [data-testid="metric-container"] > div {
+        color: white !important;
     }
     
     /* Progress bar */
@@ -254,14 +299,16 @@ st.markdown("""
 col1, col2, col3 = st.columns([1, 6, 1])
 
 with col2:
-    # Input field with custom styling
+    # Input field with visible label
+    st.markdown('<p style="color: white; font-weight: 600; margin-bottom: 0.5rem;">🔗 YouTube Video URL</p>', unsafe_allow_html=True)
     youtube_url = st.text_input(
         "YouTube Video URL",
         placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         label_visibility="collapsed"
     )
     
-    # Language selection (you can expand this)
+    # Language selection with visible label
+    st.markdown('<p style="color: white; font-weight: 600; margin-bottom: 0.5rem; margin-top: 1rem;">🌐 Select Language</p>', unsafe_allow_html=True)
     language_options = {
         "English": "en",
         "Spanish": "es", 
@@ -278,7 +325,8 @@ with col2:
     selected_language = st.selectbox(
         "Select Language",
         options=list(language_options.keys()),
-        index=0
+        index=0,
+        label_visibility="collapsed"
     )
     
     # Main action button
@@ -375,12 +423,11 @@ with col2:
         else:
             st.warning("⚠️ Please enter a YouTube URL first.")
 
-# Footer with additional info
+# Remove the ugly footer and replace with cleaner version
 st.markdown("---")
 st.markdown("""
-<div style="text-align: center; color: rgba(255, 255, 255, 0.6); padding: 1rem;">
-    <p>🚀 Powered by yt-dlp • Made with ❤️ and Streamlit</p>
-    <p style="font-size: 0.8rem;">Supports multiple languages • Fast & reliable transcript extraction</p>
+<div style="text-align: center; color: rgba(255, 255, 255, 0.7); padding: 0.5rem; font-size: 0.9rem;">
+    <p>Fast & reliable transcript extraction • Supports 10+ languages</p>
 </div>
 """, unsafe_allow_html=True)
 
