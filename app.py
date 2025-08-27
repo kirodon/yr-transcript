@@ -114,34 +114,32 @@ def clean_vtt(vtt_content):
 # --- THIS IS THE MODIFIED FUNCTION ---
 def fetch_transcript_text(video_url, lang_code='en'):
     """
-    Fetch transcript using yt-dlp, now with enhanced error reporting
-    to capture debug information from the server.
+    Fetch transcript using the most robust yt-dlp command: downloading all
+    available subtitles and then selecting the correct one.
     """
     base_filename = f"transcript_{int(time.time())}_{hash(video_url)}"
-    debug_info = {} # A dictionary to hold our debug messages
+    debug_info = {}
 
     try:
+        # --- THIS IS THE FINAL, MOST POWERFUL COMMAND ---
         command = [
             "yt-dlp",
-            "--write-sub", 
-            #"--write-auto-sub",
-            "--sub-lang", lang_code,
+            "--all-subs",          # <-- CRITICAL CHANGE: Download ALL available subtitles
             "--skip-download",
             "-o", base_filename,
             video_url
         ]
         
-        # Run the command and capture all output
         result = subprocess.run(command, capture_output=True, text=True, timeout=60)
         
         debug_info['yt_dlp_stdout'] = result.stdout.strip()
         debug_info['yt_dlp_stderr'] = result.stderr.strip()
         debug_info['exit_code'] = result.returncode
 
-        # Check for the transcript file
+        # Now, we look for the specific language file we want among all the ones downloaded
         vtt_files = glob.glob(f"{base_filename}*.{lang_code}.vtt")
         if not vtt_files:
-            # If the file isn't found, the debug info is the most important thing
+            # If our specific language file wasn't found, then it truly doesn't exist
             return f"ERROR: Transcript file not found.", debug_info
 
         # If we found the file, proceed as normal
@@ -157,9 +155,10 @@ def fetch_transcript_text(video_url, lang_code='en'):
     except Exception as e:
         return f"ERROR: A Python exception occurred: {str(e)}", debug_info
     finally:
+        # Clean up ALL downloaded files for this request, regardless of language
         for f in glob.glob(f"{base_filename}*.vtt"):
             os.remove(f)
-
+            
 # --- YOUR UI CODE WITH A NEW DEBUGGING SECTION ---
 with st.container():
     st.markdown("""
@@ -213,6 +212,7 @@ with st.container():
                     )
         else:
             st.warning("Please enter a YouTube URL.")
+
 
 
 
