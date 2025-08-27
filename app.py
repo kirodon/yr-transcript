@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for a clean and simple UX
+# Custom CSS for a clean and compact UX
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap');
@@ -27,18 +27,17 @@ st.markdown("""
     }
     
     .main-container {
-        max-width: 700px;
+        max-width: 600px;
         margin: 0 auto;
         padding: 2rem;
         background: #ffffff;
         border-radius: 12px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        margin-top: 2rem;
-        margin-bottom: 2rem;
+        margin-top: 1rem;
     }
     
     .main-title {
-        font-size: 2.5rem;
+        font-size: 2rem;
         font-weight: 500;
         color: #2c3e50;
         text-align: center;
@@ -46,24 +45,28 @@ st.markdown("""
     }
     
     .subtitle {
-        font-size: 1rem;
+        font-size: 0.9rem;
         color: #7f8c8d;
         text-align: center;
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
         font-weight: 300;
     }
     
-    .stTextInput > div > div > input {
+    .stTextInput > div > div > input,
+    .stSelectbox > div > div > div {
+        max-width: 100% !important;
+        width: 100% !important;
         background: #ffffff !important;
         border: 1px solid #ecf0f1 !important;
         border-radius: 8px !important;
         color: #2c3e50 !important;
         font-size: 1rem !important;
-        padding: 0.8rem 1rem !important;
+        padding: 0.7rem 1rem !important;
         transition: border-color 0.3s ease;
     }
     
-    .stTextInput > div > div > input:focus {
+    .stTextInput > div > div > input:focus,
+    .stSelectbox > div > div > div:focus-within {
         border-color: #3498db !important;
     }
     
@@ -73,16 +76,9 @@ st.markdown("""
         margin-bottom: 0.5rem !important;
     }
     
-    .stSelectbox > div > div > div {
-        background: #ffffff !important;
-        border: 1px solid #ecf0f1 !important;
-        border-radius: 8px !important;
-        color: #2c3e50 !important;
-    }
-    
     .stButton > button {
         width: 100%;
-        padding: 0.9rem;
+        padding: 0.8rem;
         background: #3498db;
         border: none;
         border-radius: 8px;
@@ -123,21 +119,21 @@ st.markdown("""
     
     .metric-card {
         background: #f9fbfd;
-        padding: 0.8rem;
+        padding: 0.7rem;
         border-radius: 8px;
         text-align: center;
         border: 1px solid #ecf0f1;
     }
     
     .metric-value {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
         font-weight: 500;
         color: #2c3e50;
     }
     
     .metric-label {
         color: #7f8c8d;
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         margin-top: 0.3rem;
     }
 </style>
@@ -187,7 +183,7 @@ st.markdown("""
 <p class="subtitle">Extract and download transcripts effortlessly</p>
 """, unsafe_allow_html=True)
 
-col1, col2, col3 = st.columns([1, 6, 1])
+col1, col2, col3 = st.columns([1, 4, 1])  # Adjusted to narrower central column
 
 with col2:
     st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.5rem;">🔗 YouTube Video URL</p>', unsafe_allow_html=True)
