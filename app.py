@@ -124,7 +124,7 @@ def fetch_transcript_text(video_url, lang_code='en'):
         command = [
             "yt-dlp",
             "--write-sub", 
-            "--write-auto-sub",
+            #"--write-auto-sub",
             "--sub-lang", lang_code,
             "--skip-download",
             "-o", base_filename,
@@ -213,6 +213,7 @@ with st.container():
                     )
         else:
             st.warning("Please enter a YouTube URL.")
+
 
 
 
