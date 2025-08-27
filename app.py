@@ -8,11 +8,11 @@ import time
 st.set_page_config(
     page_title="YouTube Transcript Fetcher",
     page_icon="🎬",
-    layout="wide",
+    layout="centered",  # Changed to 'centered' for better control
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for a clean and compact UX
+# Custom CSS to hide default markdown and enforce compact layout
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap');
@@ -21,13 +21,24 @@ st.markdown("""
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
+    /* Hide or style default Streamlit markdown container */
+    .stMarkdown {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    [data-testid="stMarkdownContainer"] {
+        padding: 0 !important;
+        margin: 0 !important;
+        background: none !important;
+    }
+    
     .stApp {
         background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
         font-family: 'Roboto', sans-serif;
     }
     
     .main-container {
-        max-width: 500px; /* Narrower container */
+        max-width: 450px; /* Even narrower */
         margin: 0 auto;
         padding: 1.5rem;
         background: #ffffff;
@@ -55,7 +66,7 @@ st.markdown("""
     .stTextInput > div > div > input,
     .stSelectbox > div > div > div {
         max-width: 100% !important;
-        width: 100% !important; /* Reset to natural width */
+        width: 100% !important;
         background: #ffffff !important;
         border: 1px solid #ecf0f1 !important;
         border-radius: 6px !important;
@@ -77,7 +88,7 @@ st.markdown("""
     }
     
     .stButton > button {
-        width: 100% !important; /* Reset to natural width */
+        width: 100% !important;
         padding: 0.7rem;
         background: #3498db;
         border: none;
@@ -183,9 +194,8 @@ st.markdown("""
 <p class="subtitle">Extract and download transcripts effortlessly</p>
 """, unsafe_allow_html=True)
 
-col1, col2, col3 = st.columns([1, 3, 1])  # Further narrowed central column
-
-with col2:
+# Use a single column for simplicity, relying on max-width
+with st.container():
     st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.4rem;">🔗 YouTube Video URL</p>', unsafe_allow_html=True)
     youtube_url = st.text_input(
         "YouTube Video URL",
@@ -210,7 +220,7 @@ with col2:
     selected_language = st.selectbox(
         "Select Language",
         options=list(language_options.keys()),
-        index=0,
+        index=0,  # Ensure "English" is default
         label_visibility="collapsed"
     )
     
