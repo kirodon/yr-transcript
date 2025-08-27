@@ -23,30 +23,9 @@ st.markdown("""
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    [data-testid="stMarkdownContainer"] > *:not(.main-container), 
-    [data-testid="stMarkdownContainer"] > *:not(.main-container) * {
-        padding: 0 !important;
-        margin: 0 !important;
-        background: none !important;
-        border: none !important;
-        box-shadow: none !important;
-    }
-
-    [data-testid="stMarkdown"] {
-        background: transparent !important;
-        border: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        box-shadow: none !important;
-    }
-    
     .stApp {
         background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
         font-family: 'Roboto', sans-serif;
-    }
-    
-    .main-container {
-        
     }
     
     .main-title {
@@ -65,8 +44,7 @@ st.markdown("""
         font-weight: 300;
     }
     
-    .stTextInput > div > div > input,
-    .stSelectbox > div > div > div {
+    .stTextInput > div > div > input {
         max-width: 100% !important;
         width: 100% !important;
         background: #ffffff !important;
@@ -77,16 +55,25 @@ st.markdown("""
         padding: 0.6rem 0.9rem !important;
         transition: border-color 0.3s ease;
     }
+
+    /* This is the corrected CSS for the Selectbox */
+    .stSelectbox > div > div > div {
+        max-width: 100% !important;
+        width: 100% !important;
+        background: #ffffff !important;
+        border: 1px solid #ecf0f1 !important;
+        border-radius: 6px !important;
+        font-size: 0.95rem !important;
+        padding: 0.6rem 0.9rem !important;
+        transition: border-color 0.3s ease;
+    }
+    .stSelectbox > div > div > div * {
+        color: #2c3e50 !important;
+    }
     
     .stTextInput > div > div > input:focus,
     .stSelectbox > div > div > div:focus-within {
         border-color: #3498db !important;
-    }
-    
-    .stTextInput > label, .stSelectbox > label {
-        color: #2c3e50 !important;
-        font-weight: 400 !important;
-        margin-bottom: 0.4rem !important;
     }
     
     .stButton > button {
@@ -126,10 +113,6 @@ st.markdown("""
         background: #27ae60;
     }
     
-    .stProgress > div > div > div > div {
-        background: #3498db;
-    }
-    
     .metric-card {
         background: #f9fbfd;
         padding: 0.6rem;
@@ -152,8 +135,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- Transcript Utilities ----------
+# (The rest of your Python code is perfect, no changes needed there)
 
+# ---------- Transcript Utilities ----------
 def clean_vtt(vtt_content):
     """Clean VTT file content into plain transcript text."""
     no_tags = re.sub(r'<[^>]+>', '', vtt_content)
@@ -171,26 +155,21 @@ def clean_vtt(vtt_content):
 
 def fetch_transcript_text(video_url, lang_code='en'):
     """Fetch transcript from YouTube using yt-dlp."""
-    if not shutil.which("yt-dlp"):
-        return "Error: yt-dlp is not installed. Please install it first."
-
+    # Using a unique temp file name to avoid conflicts if multiple users access the app
+    temp_filename_base = f"transcript_{int(time.time())}_{hash(video_url)}"
+    
     try:
-        # Remove old transcript files
-        for f in glob.glob("downloaded_transcript*.vtt"):
-            os.remove(f)
-
         command = [
             "yt-dlp",
             "--write-auto-sub",
             "--sub-lang", lang_code,
             "--skip-download",
-            "-o", "downloaded_transcript",
+            "-o", temp_filename_base,
             video_url
         ]
         subprocess.run(command, capture_output=True, text=True, timeout=60, check=True)
 
-        # Find the transcript file
-        vtt_files = glob.glob(f"downloaded_transcript*.{lang_code}.vtt")
+        vtt_files = glob.glob(f"{temp_filename_base}*.vtt")
         if not vtt_files:
             return f"Error: No transcript found for '{lang_code}'. Check subtitle availability."
 
@@ -211,89 +190,58 @@ def fetch_transcript_text(video_url, lang_code='en'):
     except Exception as e:
         return f"Unexpected error: {str(e)}"
     finally:
-        for f in glob.glob("downloaded_transcript*.vtt"):
+        # Clean up any transcript files that were created
+        for f in glob.glob(f"{temp_filename_base}*.vtt"):
             os.remove(f)
 
+# --- Streamlit UI ---
 with st.container():
     st.markdown("""
     <h1 class="main-title">🎬 YouTube Transcript Fetcher</h1>
     <p class="subtitle">Extract and download transcripts effortlessly</p>
     """, unsafe_allow_html=True)
 
-    # Input fields
-    st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.4rem;">🔗 YouTube Video URL</p>', unsafe_allow_html=True)
     youtube_url = st.text_input(
-        "YouTube Video URL",
-        placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-        label_visibility="collapsed"
+        "🔗 YouTube Video URL",
+        placeholder="https://www.youtube.com/watch?v=...",
     )
 
-    st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.4rem; margin-top: 1rem;">🌐 Select Language</p>', unsafe_allow_html=True)
     language_options = {
-        "English": "en",
-        "Spanish": "es",
-        "French": "fr",
-        "German": "de",
-        "Italian": "it",
-        "Portuguese": "pt",
-        "Russian": "ru",
-        "Japanese": "ja",
-        "Korean": "ko",
-        "Chinese": "zh"
+        "English": "en", "Spanish": "es", "French": "fr", "German": "de",
+        "Italian": "it", "Portuguese": "pt", "Russian": "ru", "Japanese": "ja",
+        "Korean": "ko", "Chinese": "zh", "Romanian": "ro"
     }
 
-    if "language_select" not in st.session_state:
-        st.session_state.language_select = list(language_options.keys())[0]  # "English"
-
-    selected_language = st.selectbox(
-        "Select Language",
+    selected_language_display = st.selectbox(
+        "🌐 Select Language",
         options=list(language_options.keys()),
-        index=list(language_options.keys()).index(st.session_state.language_select),
-        label_visibility="collapsed",
-        key="language_select"
-   )
+    )
 
     if st.button("Fetch Transcript", use_container_width=True):
         if youtube_url:
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            for i in range(20):
-                progress_bar.progress(i * 5)
-                status_text.text(f"Processing... {i * 5}%")
-                time.sleep(0.05)
-            
-            with st.spinner('Fetching transcript...'):
-                transcript = fetch_transcript_text(youtube_url, lang_code=language_options[selected_language])
-                
-                progress_bar.progress(100)
-                status_text.text("Done!")
-                time.sleep(0.5)
-                progress_bar.empty()
-                status_text.empty()
+            lang_code = language_options[selected_language_display]
+            with st.spinner(f'Fetching {selected_language_display} transcript...'):
+                transcript = fetch_transcript_text(youtube_url, lang_code=lang_code)
                 
                 if transcript.startswith("Error:"):
                     st.error(transcript)
                 else:
                     word_count = len(transcript.split())
                     char_count = len(transcript)
-                    estimated_read_time = max(1, word_count // 200)
+                    estimated_read_time = max(1, round(word_count / 200)) # Standard reading speed
                     
+                    st.markdown("---")
                     st.markdown("### Transcript Stats")
-                    metric_col1, metric_col2, metric_col3 = st.columns(3)
-                    with metric_col1:
-                        st.markdown('<div class="metric-card"><div class="metric-value">{:,}</div><div class="metric-label">Words</div></div>'.format(word_count), unsafe_allow_html=True)
-                    with metric_col2:
-                        st.markdown('<div class="metric-card"><div class="metric-value">{:,}</div><div class="metric-label">Characters</div></div>'.format(char_count), unsafe_allow_html=True)
-                    with metric_col3:
-                        st.markdown('<div class="metric-card"><div class="metric-value">{}</div><div class="metric-label">Est. Read Time</div></div>'.format(f"{estimated_read_time} min"), unsafe_allow_html=True)
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        col1.metric("Words", f"{word_count:,}")
+                    with col2:
+                        col2.metric("Characters", f"{char_count:,}")
+                    with col3:
+                        col3.metric("Est. Read Time", f"~{estimated_read_time} min")
                     
                     st.markdown("### Transcript")
-                    st.text_area(
-                        "Full transcript:",
-                        transcript,
-                        height=400,
-                        label_visibility="collapsed"
-                    )
+                    st.text_area("Full transcript:", transcript, height=300, label_visibility="collapsed")
                     st.download_button(
                         label="⬇️ Download Transcript",
                         data=transcript.encode('utf-8'),
@@ -303,15 +251,3 @@ with st.container():
                     )
         else:
             st.warning("Please enter a YouTube URL.")
-
-    st.markdown("---")
-    st.markdown("""
-    <div style="text-align: center; color: #7f8c8d; padding: 0.5rem; font-size: 0.85rem;">
-        <p>Fast and reliable transcript extraction</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-
-
-
-
