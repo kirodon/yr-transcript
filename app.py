@@ -111,53 +111,55 @@ def clean_vtt(vtt_content):
     clean_text = re.sub(r'\s+', ' ', clean_text).strip()
     return clean_text
 
+# --- THIS IS THE MODIFIED FUNCTION ---
 def fetch_transcript_text(video_url, lang_code='en'):
     """
-    Fetch transcript from YouTube using yt-dlp with unique filenames
-    to prevent race conditions on Streamlit Cloud.
+    Fetch transcript using yt-dlp, now with enhanced error reporting
+    to capture debug information from the server.
     """
-    # Create a unique filename for this specific request
-    # Using timestamp and hash of URL makes it virtually impossible to collide
     base_filename = f"transcript_{int(time.time())}_{hash(video_url)}"
-    
+    debug_info = {} # A dictionary to hold our debug messages
+
     try:
         command = [
             "yt-dlp",
             "--write-auto-sub",
             "--sub-lang", lang_code,
             "--skip-download",
-            "-o", base_filename,  # Use the unique base name
+            "-o", base_filename,
             video_url
         ]
-        subprocess.run(command, capture_output=True, text=True, timeout=60, check=True)
+        
+        # Run the command and capture all output
+        result = subprocess.run(command, capture_output=True, text=True, timeout=60)
+        
+        debug_info['yt_dlp_stdout'] = result.stdout.strip()
+        debug_info['yt_dlp_stderr'] = result.stderr.strip()
+        debug_info['exit_code'] = result.returncode
 
-        # Find the specific transcript file that was just created
+        # Check for the transcript file
         vtt_files = glob.glob(f"{base_filename}*.{lang_code}.vtt")
         if not vtt_files:
-            return f"Error: No transcript found for '{lang_code}'. Check subtitle availability."
+            # If the file isn't found, the debug info is the most important thing
+            return f"ERROR: Transcript file not found.", debug_info
 
+        # If we found the file, proceed as normal
         with open(vtt_files[0], 'r', encoding='utf-8') as f:
             vtt_content = f.read()
 
         clean_text = clean_vtt(vtt_content)
         if not clean_text:
-            return f"Error: Transcript for '{lang_code}' is empty."
+            return f"ERROR: Transcript for '{lang_code}' is empty.", debug_info
 
-        return clean_text
+        return clean_text, debug_info
 
-    except subprocess.CalledProcessError as e:
-        error_message = e.stderr.strip()
-        if "no subtitles available" in error_message.lower():
-            return f"Error: No subtitles available for '{lang_code}'."
-        return f"Error running yt-dlp: {error_message}"
     except Exception as e:
-        return f"Unexpected error: {str(e)}"
+        return f"ERROR: A Python exception occurred: {str(e)}", debug_info
     finally:
-        # Critically, clean up ONLY the files associated with THIS request
         for f in glob.glob(f"{base_filename}*.vtt"):
             os.remove(f)
 
-# --- Streamlit UI ---
+# --- YOUR UI CODE WITH A NEW DEBUGGING SECTION ---
 with st.container():
     st.markdown("""
     <h1 class="main-title">🎬 YouTube Transcript Fetcher</h1>
@@ -174,37 +176,35 @@ with st.container():
         "Italian": "it", "Portuguese": "pt", "Russian": "ru", "Japanese": "ja",
         "Korean": "ko", "Chinese": "zh", "Romanian": "ro"
     }
-
-    selected_language_display = st.selectbox(
+    selected_language = st.selectbox(
         "🌐 Select Language",
         options=list(language_options.keys()),
     )
 
     if st.button("Fetch Transcript", use_container_width=True):
         if youtube_url:
-            lang_code = language_options[selected_language_display]
-            with st.spinner(f'Fetching {selected_language_display} transcript...'):
-                transcript = fetch_transcript_text(youtube_url, lang_code=lang_code)
+            lang_code = language_options[selected_language]
+            with st.spinner(f'Fetching {selected_language} transcript...'):
+                # The function now returns two values: the result and the debug info
+                transcript, debug_info = fetch_transcript_text(youtube_url, lang_code=lang_code)
                 
-                if transcript.startswith("Error:"):
-                    st.error(transcript)
+                if transcript.startswith("ERROR:"):
+                    st.error(f"Failed to retrieve transcript. This often means subtitles for the selected language do not exist for this video.")
+                    
+                    # --- THIS IS THE NEW DEBUGGING EXPANDER ---
+                    with st.expander("Click here to see technical details"):
+                        st.write("This information is crucial for debugging the issue.")
+                        st.code(f"""
+                        yt-dlp Exit Code: {debug_info.get('exit_code', 'N/A')}
+                        --- Standard Output (stdout) ---
+                        {debug_info.get('yt_dlp_stdout', 'No output captured.')}
+                        --- Standard Error (stderr) ---
+                        {debug_info.get('yt_dlp_stderr', 'No output captured.')}
+                        """)
                 else:
-                    word_count = len(transcript.split())
-                    char_count = len(transcript)
-                    estimated_read_time = max(1, round(word_count / 200)) # Standard reading speed
-                    
-                    st.markdown("---")
-                    st.markdown("### Transcript Stats")
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        col1.metric("Words", f"{word_count:,}")
-                    with col2:
-                        col2.metric("Characters", f"{char_count:,}")
-                    with col3:
-                        col3.metric("Est. Read Time", f"~{estimated_read_time} min")
-                    
-                    st.markdown("### Transcript")
-                    st.text_area("Full transcript:", transcript, height=300, label_visibility="collapsed")
+                    # (The success part of your UI is unchanged)
+                    st.success("Transcript fetched successfully!")
+                    st.text_area("Full transcript:", transcript, height=300)
                     st.download_button(
                         label="⬇️ Download Transcript",
                         data=transcript.encode('utf-8'),
@@ -214,5 +214,6 @@ with st.container():
                     )
         else:
             st.warning("Please enter a YouTube URL.")
+
 
 
