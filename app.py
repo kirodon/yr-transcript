@@ -173,9 +173,7 @@ with st.container():
     )
 
     language_options = {
-        "English": "en", "Spanish": "es", "French": "fr", "German": "de",
-        "Italian": "it", "Portuguese": "pt", "Russian": "ru", "Japanese": "ja",
-        "Korean": "ko", "Chinese": "zh", "Romanian": "ro"
+        "English": "en", "Hungarian": "hu", "Romanian": "ro"
     }
     selected_language = st.selectbox(
         "🌐 Select Language",
@@ -215,6 +213,7 @@ with st.container():
                     )
         else:
             st.warning("Please enter a YouTube URL.")
+
 
 
 
