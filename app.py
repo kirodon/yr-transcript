@@ -3,6 +3,8 @@ import subprocess
 import os
 import re
 import time
+import shutil
+import glob
 
 # Configure the page with a minimalist theme
 st.set_page_config(
@@ -12,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS to target only unwanted Streamlit markdown styling
+# Custom CSS
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap');
@@ -21,7 +23,6 @@ st.markdown("""
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* Target only the default markdown container's unwanted styling */
     [data-testid="stMarkdownContainer"] > *:not(.main-container), 
     [data-testid="stMarkdownContainer"] > *:not(.main-container) * {
         padding: 0 !important;
@@ -148,17 +149,33 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ---------- Transcript Utilities ----------
+
 def clean_vtt(vtt_content):
+    """Clean VTT file content into plain transcript text."""
     no_tags = re.sub(r'<[^>]+>', '', vtt_content)
     lines = no_tags.strip().split('\n')
-    clean_lines = [line.strip() for line in lines if line.strip() and not line.startswith('WEBVTT') and '-->' not in line and not line.startswith('Kind:')]
+    clean_lines = [
+        line.strip() for line in lines
+        if line.strip() and not line.startswith('WEBVTT')
+        and '-->' not in line and not line.startswith('Kind:')
+    ]
     seen = set()
     unique_lines = [x for x in clean_lines if not (x in seen or seen.add(x))]
-    return ' '.join(unique_lines)
+    clean_text = ' '.join(unique_lines)
+    clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+    return clean_text
 
 def fetch_transcript_text(video_url, lang_code='en'):
-    output_filename = f"downloaded_transcript.{lang_code}.vtt"
+    """Fetch transcript from YouTube using yt-dlp."""
+    if not shutil.which("yt-dlp"):
+        return "Error: yt-dlp is not installed. Please install it first."
+
     try:
+        # Remove old transcript files
+        for f in glob.glob("downloaded_transcript*.vtt"):
+            os.remove(f)
+
         command = [
             "yt-dlp",
             "--write-auto-sub",
@@ -167,15 +184,22 @@ def fetch_transcript_text(video_url, lang_code='en'):
             "-o", "downloaded_transcript",
             video_url
         ]
-        result = subprocess.run(command, capture_output=True, text=True, timeout=60, check=True)
-        if not os.path.exists(output_filename):
+        subprocess.run(command, capture_output=True, text=True, timeout=60, check=True)
+
+        # Find the transcript file
+        vtt_files = glob.glob(f"downloaded_transcript*.{lang_code}.vtt")
+        if not vtt_files:
             return f"Error: No transcript found for '{lang_code}'. Check subtitle availability."
-        with open(output_filename, 'r', encoding='utf-8') as f:
+
+        with open(vtt_files[0], 'r', encoding='utf-8') as f:
             vtt_content = f.read()
+
         clean_text = clean_vtt(vtt_content)
         if not clean_text:
             return f"Error: Transcript for '{lang_code}' is empty."
+
         return clean_text
+
     except subprocess.CalledProcessError as e:
         error_message = e.stderr.strip()
         if "no subtitles available" in error_message.lower():
@@ -184,8 +208,10 @@ def fetch_transcript_text(video_url, lang_code='en'):
     except Exception as e:
         return f"Unexpected error: {str(e)}"
     finally:
-        if os.path.exists(output_filename):
-            os.remove(output_filename)
+        for f in glob.glob("downloaded_transcript*.vtt"):
+            os.remove(f)
+
+# ---------- UI ----------
 
 st.markdown('<div class="main-container">', unsafe_allow_html=True)
 
@@ -222,7 +248,6 @@ selected_language = st.selectbox(
     label_visibility="collapsed",
     key="language_select"
 )
-st.write(f"Debug: Selected - {selected_language} ({language_options[selected_language]})")
 
 if st.button("Fetch Transcript", use_container_width=True):
     if youtube_url:
@@ -231,7 +256,7 @@ if st.button("Fetch Transcript", use_container_width=True):
         for i in range(20):
             progress_bar.progress(i * 5)
             status_text.text(f"Processing... {i * 5}%")
-            time.sleep(0.1)
+            time.sleep(0.05)
         
         with st.spinner('Fetching transcript...'):
             transcript = fetch_transcript_text(youtube_url, lang_code=language_options[selected_language])
@@ -259,22 +284,19 @@ if st.button("Fetch Transcript", use_container_width=True):
                     st.markdown('<div class="metric-card"><div class="metric-value">{}</div><div class="metric-label">Est. Read Time</div></div>'.format(f"{estimated_read_time} min"), unsafe_allow_html=True)
                 
                 st.markdown("### Transcript")
-                trans_col1, trans_col2 = st.columns([4, 1])
-                with trans_col1:
-                    st.text_area(
-                        "Full transcript:",
-                        transcript,
-                        height=400,
-                        label_visibility="collapsed"
-                    )
-                with trans_col2:
-                    st.download_button(
-                        label="Download",
-                        data=transcript.encode('utf-8'),
-                        file_name="transcript.txt",
-                        mime='text/plain',
-                        use_container_width=True
-                    )
+                st.text_area(
+                    "Full transcript:",
+                    transcript,
+                    height=400,
+                    label_visibility="collapsed"
+                )
+                st.download_button(
+                    label="⬇️ Download Transcript",
+                    data=transcript.encode('utf-8'),
+                    file_name="transcript.txt",
+                    mime='text/plain',
+                    use_container_width=True
+                )
     else:
         st.warning("Please enter a YouTube URL.")
 
