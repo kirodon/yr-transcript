@@ -114,30 +114,51 @@ def clean_vtt(vtt_content):
 # --- THIS IS THE MODIFIED FUNCTION ---
 def fetch_transcript_text(video_url, lang_code='en'):
     """
-    This is a special diagnostic function. It will not fetch a transcript.
-    It will run `yt-dlp --list-subs` to see what languages YouTube's API
-    is actually offering to the tool.
+    Fetch transcript using the final, most robust yt-dlp command.
+    This version asks for manual, auto-generated, and auto-translated subtitles.
     """
+    base_filename = f"transcript_{int(time.time())}_{hash(video_url)}"
     debug_info = {}
+
     try:
-        # --- THE FINAL DIAGNOSTIC COMMAND ---
+        # --- THIS IS THE FINAL AND CORRECT COMMAND ---
         command = [
             "yt-dlp",
-            "--list-subs",          # <-- CRITICAL CHANGE: Just list, don't download
+            "--write-sub",          # Get manually uploaded subtitles AND auto-translated ones
+            "--write-auto-sub",     # ALSO get the original auto-generated subtitles
+            "--sub-lang", lang_code,
+            "--skip-download",
+            "-o", base_filename,
             video_url
         ]
         
         result = subprocess.run(command, capture_output=True, text=True, timeout=60)
         
-        # We will return the raw output directly to see what yt-dlp sees.
-        # The output of this command IS the transcript for our purposes.
-        if result.stdout:
-            return result.stdout.strip(), {}
-        else:
-            return "ERROR: The --list-subs command returned no output.", {"stderr": result.stderr.strip()}
+        # We will keep the debug info just in case
+        debug_info['yt_dlp_stdout'] = result.stdout.strip()
+        debug_info['yt_dlp_stderr'] = result.stderr.strip()
+        debug_info['exit_code'] = result.returncode
+
+        # Look for the downloaded file
+        vtt_files = glob.glob(f"{base_filename}*.{lang_code}.vtt")
+        if not vtt_files:
+            return f"ERROR: Transcript file not found.", debug_info
+
+        with open(vtt_files[0], 'r', encoding='utf-8') as f:
+            vtt_content = f.read()
+
+        clean_text = clean_vtt(vtt_content)
+        if not clean_text:
+            return f"ERROR: Transcript for '{lang_code}' is empty.", debug_info
+
+        return clean_text, debug_info
 
     except Exception as e:
-        return f"ERROR: A Python exception occurred: {str(e)}", {}
+        return f"ERROR: A Python exception occurred: {str(e)}", debug_info
+    finally:
+        # Clean up all possible downloaded files
+        for f in glob.glob(f"{base_filename}*.vtt"):
+            os.remove(f)
             
 # --- YOUR UI CODE WITH A NEW DEBUGGING SECTION ---
 with st.container():
@@ -192,6 +213,7 @@ with st.container():
                     )
         else:
             st.warning("Please enter a YouTube URL.")
+
 
 
 
