@@ -238,8 +238,7 @@ with st.container():
         "Select Language",
         options=list(language_options.keys()),
         index=0,
-        label_visibility="collapsed",
-        key="language_select"
+        label_visibility="collapsed"
     )
 
     if st.button("Fetch Transcript", use_container_width=True):
@@ -299,5 +298,6 @@ with st.container():
         <p>Fast and reliable transcript extraction</p>
     </div>
     """, unsafe_allow_html=True)
+
 
 
