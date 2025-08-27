@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for a clean and compact UX
+# Custom CSS for a clean and compact UX with debug indicator
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap');
@@ -34,6 +34,7 @@ st.markdown("""
         border-radius: 12px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         margin-top: 1rem;
+        border: 2px solid #ff0000; /* Debug: Red border to confirm container */
     }
     
     .main-title {
@@ -55,7 +56,7 @@ st.markdown("""
     .stTextInput > div > div > input,
     .stSelectbox > div > div > div {
         max-width: 100% !important;
-        width: 100% !important;
+        width: 400px !important; /* Fixed width for testing */
         background: #ffffff !important;
         border: 1px solid #ecf0f1 !important;
         border-radius: 8px !important;
@@ -77,7 +78,7 @@ st.markdown("""
     }
     
     .stButton > button {
-        width: 100%;
+        width: 400px !important; /* Fixed width for testing */
         padding: 0.8rem;
         background: #3498db;
         border: none;
@@ -139,6 +140,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Debug message to confirm code execution
+st.write("App loaded at 01:26 PM EEST, August 27, 2025")
+
 def clean_vtt(vtt_content):
     no_tags = re.sub(r'<[^>]+>', '', vtt_content)
     lines = no_tags.strip().split('\n')
@@ -183,7 +187,7 @@ st.markdown("""
 <p class="subtitle">Extract and download transcripts effortlessly</p>
 """, unsafe_allow_html=True)
 
-col1, col2, col3 = st.columns([1, 4, 1])  # Adjusted to narrower central column
+col1, col2, col3 = st.columns([1, 4, 1])
 
 with col2:
     st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.5rem;">🔗 YouTube Video URL</p>', unsafe_allow_html=True)
