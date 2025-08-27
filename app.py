@@ -38,12 +38,7 @@ st.markdown("""
     }
     
     .main-container {
-        max-width: 450px;
-        margin: 0 auto;
-        padding: 1.5rem;
-        background: #ffffff;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        
     }
     
     .main-title {
@@ -213,10 +208,8 @@ def fetch_transcript_text(video_url, lang_code='en'):
 
 with st.container():
     st.markdown("""
-    <div class="main-container">
-        <h1 class="main-title">🎬 YouTube Transcript Fetcher</h1>
-        <p class="subtitle">Extract and download transcripts effortlessly</p>
-    </div>
+    <h1 class="main-title">🎬 YouTube Transcript Fetcher</h1>
+    <p class="subtitle">Extract and download transcripts effortlessly</p>
     """, unsafe_allow_html=True)
 
     # Input fields
@@ -306,4 +299,5 @@ with st.container():
         <p>Fast and reliable transcript extraction</p>
     </div>
     """, unsafe_allow_html=True)
+
 
