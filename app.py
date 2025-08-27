@@ -1,54 +1,59 @@
 import streamlit as st
 import subprocess
 import os
-import re
+import re # <-- Added this important line
 
 def clean_vtt(vtt_content):
     """
-    Removes timestamps and metadata from a VTT file content,
-    and combines lines of text.
+    A more robust function to clean VTT content.
+    - Removes all HTML-like tags and timestamps using regex.
+    - Removes VTT metadata lines.
+    - Removes duplicate lines of text.
     """
-    lines = vtt_content.strip().split('\n')
-    # Filter out VTT metadata lines (like WEBVTT, timestamps)
-    text_lines = [line for line in lines if not line.startswith('WEBVTT') and not '-->' in line and line.strip()]
+    # Use a regular expression to find and remove all tags like <...>
+    no_tags = re.sub(r'<[^>]+>', '', vtt_content)
     
-    # Remove duplicate lines while preserving order
+    # Process the text line by line now
+    lines = no_tags.strip().split('\n')
+    
+    clean_lines = []
+    for line in lines:
+        # Skip VTT metadata and empty lines
+        if line.strip() and not line.startswith('WEBVTT') and '-->' not in line:
+            clean_lines.append(line.strip())
+
+    # Remove duplicate lines while preserving the order
     seen = set()
-    unique_lines = [x for x in text_lines if not (x in seen or seen.add(x))]
+    unique_lines = [x for x in clean_lines if not (x in seen or seen.add(x))]
     
+    # Join the unique lines to form the final transcript
     return ' '.join(unique_lines)
 
 def fetch_transcript_text(video_url):
     """
     Uses yt-dlp to download the transcript, read it, and then clean it up.
-    This is a much more reliable method for cloud environments.
     """
-    # Use a unique filename in a temp directory if possible, but for Streamlit, a simple name is fine
     output_filename = "downloaded_transcript.en.vtt"
     
     try:
-        # Command to download the English auto-caption, in .vtt format
         command = [
             "yt-dlp",
-            "--write-auto-sub",      # Get the automatically generated subtitles
-            "--sub-lang", "en",      # Specify English
-            "--skip-download",       # Don't download the video itself
-            "-o", "downloaded_transcript", # Specify the base output name
+            "--write-auto-sub",
+            "--sub-lang", "en",
+            "--skip-download",
+            "-o", "downloaded_transcript",
             video_url
         ]
 
-        # Run the command. Capture output to check for errors.
         result = subprocess.run(command, capture_output=True, text=True, timeout=60, check=True)
 
-        # Check if the file was actually created
         if not os.path.exists(output_filename):
-            return f"Error: yt-dlp ran but did not create the subtitle file. The video might not have an English transcript."
+            return "Error: yt-dlp ran but did not create the subtitle file. The video might not have an English transcript."
 
-        # Read the content of the downloaded .vtt file
         with open(output_filename, 'r', encoding='utf-8') as f:
             vtt_content = f.read()
 
-        # Clean the VTT content to get only the spoken text
+        # This now calls our new and improved cleaning function
         clean_text = clean_vtt(vtt_content)
         
         return clean_text
@@ -63,12 +68,10 @@ def fetch_transcript_text(video_url):
     except Exception as e:
         return f"An unexpected error occurred: {e}"
     finally:
-        # CRITICAL: Clean up the downloaded file
         if os.path.exists(output_filename):
             os.remove(output_filename)
 
-
-# --- Streamlit Web App Interface ---
+# --- Streamlit Web App Interface (No changes needed here) ---
 st.set_page_config(page_title="YouTube Transcript Fetcher", layout="centered")
 st.title("YouTube Transcript Fetcher")
 st.write("This tool uses `yt-dlp` for robust transcript fetching. Paste a YouTube URL below.")
@@ -77,7 +80,7 @@ youtube_url = st.text_input("Enter YouTube URL:", placeholder="e.g., https://www
 
 if st.button("Get Transcript"):
     if youtube_url:
-        with st.spinner('Fetching transcript using yt-dlp... This may take a moment.'):
+        with st.spinner('Fetching and cleaning transcript...'):
             transcript = fetch_transcript_text(youtube_url)
             if transcript.startswith("Error:"):
                 st.error(transcript)
