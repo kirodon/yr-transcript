@@ -373,4 +373,8 @@ st.markdown("---")
 st.markdown("""
 <div style="text-align: center; color: rgba(255, 255, 255, 0.6); padding: 1rem;">
     <p>🚀 Powered by yt-dlp • Made with ❤️ and Streamlit</p>
-    <p style="font-size: 0.8rem
+    <p style="font-size: 0.8rem;">Supports multiple languages • Fast & reliable transcript extraction</p>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
