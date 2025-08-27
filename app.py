@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for a clean and compact UX with debug indicator
+# Custom CSS for a clean and compact UX
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap');
@@ -27,26 +27,25 @@ st.markdown("""
     }
     
     .main-container {
-        max-width: 600px;
+        max-width: 500px; /* Narrower container */
         margin: 0 auto;
-        padding: 2rem;
+        padding: 1.5rem;
         background: #ffffff;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         margin-top: 1rem;
-        border: 2px solid #ff0000; /* Debug: Red border to confirm container */
     }
     
     .main-title {
-        font-size: 2rem;
+        font-size: 1.8rem;
         font-weight: 500;
         color: #2c3e50;
         text-align: center;
-        margin-bottom: 1rem;
+        margin-bottom: 0.8rem;
     }
     
     .subtitle {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         color: #7f8c8d;
         text-align: center;
         margin-bottom: 1.5rem;
@@ -56,13 +55,13 @@ st.markdown("""
     .stTextInput > div > div > input,
     .stSelectbox > div > div > div {
         max-width: 100% !important;
-        width: 400px !important; /* Fixed width for testing */
+        width: 100% !important; /* Reset to natural width */
         background: #ffffff !important;
         border: 1px solid #ecf0f1 !important;
-        border-radius: 8px !important;
+        border-radius: 6px !important;
         color: #2c3e50 !important;
-        font-size: 1rem !important;
-        padding: 0.7rem 1rem !important;
+        font-size: 0.95rem !important;
+        padding: 0.6rem 0.9rem !important;
         transition: border-color 0.3s ease;
     }
     
@@ -74,17 +73,17 @@ st.markdown("""
     .stTextInput > label, .stSelectbox > label {
         color: #2c3e50 !important;
         font-weight: 400 !important;
-        margin-bottom: 0.5rem !important;
+        margin-bottom: 0.4rem !important;
     }
     
     .stButton > button {
-        width: 400px !important; /* Fixed width for testing */
-        padding: 0.8rem;
+        width: 100% !important; /* Reset to natural width */
+        padding: 0.7rem;
         background: #3498db;
         border: none;
-        border-radius: 8px;
+        border-radius: 6px;
         color: white;
-        font-size: 1rem;
+        font-size: 0.95rem;
         font-weight: 500;
         transition: background 0.3s ease;
     }
@@ -96,17 +95,17 @@ st.markdown("""
     .stTextArea > div > div > textarea {
         background: #ffffff !important;
         border: 1px solid #ecf0f1 !important;
-        border-radius: 8px !important;
+        border-radius: 6px !important;
         color: #2c3e50 !important;
     }
     
     .stDownloadButton > button {
         background: #2ecc71;
         border: none;
-        border-radius: 8px;
+        border-radius: 6px;
         color: white;
         font-weight: 500;
-        padding: 0.7rem 1.2rem;
+        padding: 0.6rem 1rem;
         transition: background 0.3s ease;
     }
     
@@ -120,28 +119,25 @@ st.markdown("""
     
     .metric-card {
         background: #f9fbfd;
-        padding: 0.7rem;
-        border-radius: 8px;
+        padding: 0.6rem;
+        border-radius: 6px;
         text-align: center;
         border: 1px solid #ecf0f1;
     }
     
     .metric-value {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         font-weight: 500;
         color: #2c3e50;
     }
     
     .metric-label {
         color: #7f8c8d;
-        font-size: 0.8rem;
-        margin-top: 0.3rem;
+        font-size: 0.75rem;
+        margin-top: 0.2rem;
     }
 </style>
 """, unsafe_allow_html=True)
-
-# Debug message to confirm code execution
-st.write("App loaded at 01:26 PM EEST, August 27, 2025")
 
 def clean_vtt(vtt_content):
     no_tags = re.sub(r'<[^>]+>', '', vtt_content)
@@ -187,17 +183,17 @@ st.markdown("""
 <p class="subtitle">Extract and download transcripts effortlessly</p>
 """, unsafe_allow_html=True)
 
-col1, col2, col3 = st.columns([1, 4, 1])
+col1, col2, col3 = st.columns([1, 3, 1])  # Further narrowed central column
 
 with col2:
-    st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.5rem;">🔗 YouTube Video URL</p>', unsafe_allow_html=True)
+    st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.4rem;">🔗 YouTube Video URL</p>', unsafe_allow_html=True)
     youtube_url = st.text_input(
         "YouTube Video URL",
         placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         label_visibility="collapsed"
     )
     
-    st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.5rem; margin-top: 1rem;">🌐 Select Language</p>', unsafe_allow_html=True)
+    st.markdown('<p style="color: #2c3e50; font-weight: 400; margin-bottom: 0.4rem; margin-top: 1rem;">🌐 Select Language</p>', unsafe_allow_html=True)
     language_options = {
         "English": "en",
         "Spanish": "es",
@@ -274,7 +270,7 @@ with col2:
 
 st.markdown("---")
 st.markdown("""
-<div style="text-align: center; color: #7f8c8d; padding: 0.5rem; font-size: 0.9rem;">
+<div style="text-align: center; color: #7f8c8d; padding: 0.5rem; font-size: 0.85rem;">
     <p>Fast and reliable transcript extraction</p>
 </div>
 """, unsafe_allow_html=True)
